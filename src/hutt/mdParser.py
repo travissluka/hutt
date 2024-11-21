@@ -5,6 +5,7 @@ import re
 from abc import ABC, abstractmethod
 
 from hutt.commands.base import Command
+from hutt.commands.info import Info
 
 RE_MARKDOWN_HEADER = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<title>.*)\s*$")
 RE_COMMAND = re.compile(r"<!--\s+@(?P<command>\w+)(\s+(?P<args>.*))?\s+-->")
@@ -40,11 +41,11 @@ class Section(Token):
     return f"{self.source.line}: {'#' * self.level} {self.title}"
 
   def parse(self):
-    return [self,]
+    return [ Info(self.source, self.title, self.level), ]
 
 
 @dataclass
-class CommandToken(Token):
+class CommandInlineToken(Token):
   command: str
   args: List[dict[str, str]] = field(default_factory=list)
 
@@ -52,11 +53,7 @@ class CommandToken(Token):
     return f"{self.source.line}: <!-- @{self.command} {self.args} -->"
 
   def parse(self):
-    try:
-      commands = Command(self.command, args=self.args)
-    except ValueError as e:
-      print(f"Error parsing command: {e}")
-      commands = None
+    commands = Command(self.command).parseInline(self.source, args=self.args)
     return commands
 
 
@@ -70,11 +67,7 @@ class CommandBlockToken(Token):
     return f"{self.source.line}: ```{self.lang} @{self.command} {self.args}"
 
   def parse(self):
-    try:
-      commands = Command(self.command, args=self.args, blockLang=self.lang, blockText=self.source.content[1:])
-    except ValueError as e:
-      e.args = (e.args[0] + f"\n{self.source}",) + e.args[1:]
-      raise
+    commands = Command(self.command).parseBlock(self.source, args=self.args, blockLang=self.lang, blockText=self.source.content[1:])
     return commands
 
 
@@ -92,13 +85,27 @@ def parseMarkdown(markdownFile: str):
 
   # parse the file and tokenize the markdown content
   tokens = _tokenizeMarkdown(markdownFile.absolute(), lines)
+
+  # convert into Command classes
   commands = []
   for t in tokens:
-    newCommands = t.parse()
+    try:
+      newCommands = t.parse()
+    except Exception as e:
+      e.args = (e.args[0] + f"\nError occurred while parsing token at line {t.source.line} in {t.source.filename}",) + e.args[1:]
+      raise
     commands = commands + newCommands
 
-  return commands
+  # give each command an index number (except for info commands)
+  idx = 0
+  for c in commands:
+    if not isinstance(c, Info):
+      idx += 1
+      c.index = idx
+    else:
+      c.index = None
 
+  return commands
 
 
 def _tokenizeMarkdown(filename: str, lines: List[str]) -> List[Token]:
@@ -149,7 +156,7 @@ def _tokenizeMarkdown(filename: str, lines: List[str]) -> List[Token]:
     match = RE_COMMAND.match(line)
     if match:
       errIfInBlock()
-      tokens.append(CommandToken(
+      tokens.append(CommandInlineToken(
         command=match.group('command'),
         args=parseArgs(match.group('args')),
         source=source,

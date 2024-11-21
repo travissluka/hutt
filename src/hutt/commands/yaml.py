@@ -6,13 +6,23 @@
 from .base import CommandBase
 
 class Yaml(CommandBase):
-  name = "update_yaml"
-  def __init__(self, **kwargs):
+  name = "hutt_set_yaml"
+
+  def __init__(self, source, **kwargs):
+    self.source = source
     pass
 
   @classmethod
-  def parse(cls, **kwargs):
-    return [cls(**kwargs["args"]),]
+  def parseInline(cls, source, args):
+    return [cls(source, **args),]
+
+  @classmethod
+  def parseBlock(cls, source, **kwargs):
+    return [cls(source, **kwargs["args"]),]
+
+  def execute(self):
+    super().execute()
+    raise NotImplementedError("YamlCmd.execute() not implemented")
 
   def __repr__(self) -> str:
     return f"YamlCmd()"
