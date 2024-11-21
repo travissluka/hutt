@@ -5,7 +5,7 @@
 
 import click
 
-from .test import _test
+from .run import _run
 from .yaml import _yaml
 
 @click.group()
@@ -14,5 +14,5 @@ def cli():
   """Helpful Utility for Testing Tutorials"""
   pass
 
-cli.add_command(_test)
+cli.add_command(_run)
 cli.add_command(_yaml)
