@@ -29,15 +29,25 @@ BANNER = textwrap.dedent(f"""
   "--workdir",
   default=".",
   type=click.Path(file_okay=False, dir_okay=True, writable=True, resolve_path=True),
-  help="Set the working directory (default is current directory)."
-)
-def _run(filename, workdir):
+  help="Set the working directory (default is current directory).", )
+@click.option(
+  "--resume",
+  is_flag=True,
+  help="Resume the tutorial from the last executed command.", )
+@click.option(
+  "--logfile",
+  default="hutt.log",
+  type=click.Path(dir_okay=False, writable=True, resolve_path=True),
+  help="Specify the log file (default is 'hutt.log').", )
+def _run(filename, workdir, resume, logfile):
   """Run the tutorial from a given markdown file."""
 
   # output info
   print(BANNER)
   click.echo(f"Input markdown file: {filename}")
   click.echo(f"Working directory: {workdir}")
+  if resume:
+    raise NotImplementedError("Resume feature not implemented yet.")
 
   # parse the tutorial section into a list of commands
   commands = parseMarkdown(filename)
@@ -47,7 +57,11 @@ def _run(filename, workdir):
   # change to the specified working directory
   Path(workdir).mkdir(parents=True, exist_ok=True)
   os.chdir(workdir)
-  Command.initialize()
+  Command.initialize(env={
+    "LOG_FILE": logfile,
+    "SCRIPT_DIR": Path(filename).parent,
+    "SCRIPT_PATH": filename,
+    "WORK_DIR": workdir,})
 
   # run the commands
   msg=f"\nRunning tutorial at {filename} ({numCommands} commands)"

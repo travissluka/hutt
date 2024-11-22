@@ -9,19 +9,14 @@ class Yaml(CommandBase):
   name = "hutt_set_yaml"
 
   def __init__(self, source, **kwargs):
-    self.source = source
+    super().__init__(source)
     pass
-
-  @classmethod
-  def parseInline(cls, source, args):
-    return [cls(source, **args),]
 
   @classmethod
   def parseBlock(cls, source, **kwargs):
     return [cls(source, **kwargs["args"]),]
 
-  def execute(self):
-    super().execute()
+  def _execute(self):
     raise NotImplementedError("YamlCmd.execute() not implemented")
 
   def __repr__(self) -> str:

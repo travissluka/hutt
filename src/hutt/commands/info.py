@@ -9,12 +9,19 @@ class Info(CommandBase):
   name = "_info"
 
   def __init__(self, source, title, level):
-    self.source = source
+    super().__init__(source)
     self.title = title
     self.level = level
 
+  @classmethod
+  def parseInline(cls, source, args):
+    raise NotImplementedError("Info command does not support inline parsing")
+
   def execute(self):
-    super().execute()
+    # override the base class execute method
+    return self._execute()
+
+  def _execute(self):
     print(f"\033[1m{self}\033[0m")
     return True
 
