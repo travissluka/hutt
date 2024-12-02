@@ -23,7 +23,6 @@ class Info(CommandBase):
 
   def _execute(self):
     print(f"\033[1m{self}\033[0m")
-    return True
 
   def __str__(self) -> str:
     return f"{'#' * self.level} {self.title}"

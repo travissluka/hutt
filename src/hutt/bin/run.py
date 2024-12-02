@@ -106,18 +106,24 @@ def _run(filename, workdir, resume, logfile, ignore_error, list_tests, test_numb
     commands = [cmd for cmd in commands if cmd.index == test_number]
 
   # run the commands
+  failed=0
   msg=f"\nRunning tutorial at {filename} ({numCommands} commands)"
   print(f"\033[1m\033[93m{msg}\033[0m\033[0m")
   for command in commands:
     try:
-      success = command.execute()
+      command.execute()
     except Exception as e:
-      success = False
-      print(f"\033[91mError executing command number {command.index} \033[0m")
+      failed += 1
       print(f"\033[91m{e}\033[0m")
 
-    if (not success and not ignore_error):
-      break
+      if (not ignore_error):
+        break
 
   # finalize any backend systems
   Command.finalize()
+
+  # print summary
+
+  print("\nSummary:")
+  print(f"  Commands executed: {numCommands}")
+  print(f"  Commands failed: {failed}")

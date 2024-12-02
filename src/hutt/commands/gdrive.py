@@ -16,7 +16,6 @@ class GdriveCommand(CommandBase):
 
   def _execute(self):
     gdown.download(id=self.id, quiet=True, output=self.path)
-    return True
 
   def __str__(self):
     return f"Download from Gdrive id: {self.id} to {self.path}"

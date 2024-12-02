@@ -29,7 +29,6 @@ class YamlWrite(CommandBase):
     yaml = YAML()
     with open(self.filename, "w") as f:
       yaml.dump(self.content, f)
-    return True
 
   def __repr__(self) -> str:
     contentStr = str(self.content)

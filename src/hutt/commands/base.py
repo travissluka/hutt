@@ -39,14 +39,12 @@ class CommandBase(ABC):
     sys.stdout.flush()
 
     try:
-      res = self._execute()
-      if not res:
-        raise Exception("Command failed")
+      self._execute()
     except Exception as e:
       print("\033[91m[FAIL]\033[0m")
       raise e
+
     print("\033[92m[OK]\033[0m")
-    return True
 
   @abstractmethod
   def _execute(self):

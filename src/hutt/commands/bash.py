@@ -183,7 +183,6 @@ class BashCommand(CommandBase):
     if not success:
       raise RuntimeError(f"Command failed with exit code {success.exit_code}\n"
                           "See bash log for details")
-    return True
 
   def __repr__(self) -> str:
     s = f"Bash( cmd=\"{self.cmd}\" "
