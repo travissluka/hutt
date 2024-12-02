@@ -9,13 +9,14 @@ import gdown
 class GdriveCommand(CommandBase):
   name = "hutt_gdrive"
 
-  def __init__(self, source, id):
+  def __init__(self, source, id, path="./"):
     super().__init__(source)
     self.id = id
+    self.path = path
 
   def _execute(self):
-    gdown.download(id=self.id, quiet=True)
+    gdown.download(id=self.id, quiet=True, output=self.path)
     return True
 
   def __str__(self):
-    return f"Download from Gdrive id: {self.id}"
+    return f"Download from Gdrive id: {self.id} to {self.path}"

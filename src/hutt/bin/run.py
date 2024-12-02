@@ -27,9 +27,10 @@ BANNER = textwrap.dedent(f"""
   "filename", type=click.Path(exists=True, dir_okay=False, resolve_path=True))
 @click.option(
   "--workdir",
-  default=".",
+  default="./hutt_workdir",
   type=click.Path(file_okay=False, dir_okay=True, writable=True, resolve_path=True),
-  help="Set the working directory (default is current directory).", )
+  help="Set the working directory",
+  show_default=True)
 @click.option(
   "--resume",
   is_flag=True,
@@ -38,7 +39,8 @@ BANNER = textwrap.dedent(f"""
   "--logfile",
   default="hutt.log",
   type=click.Path(dir_okay=False, writable=True, resolve_path=True),
-  help="Specify the log file (default is 'hutt.log').", )
+  help="Specify the log file",
+  show_default=True,)
 def _run(filename, workdir, resume, logfile):
   """Run the tutorial from a given markdown file."""
 

@@ -35,7 +35,7 @@ class CommandBase(ABC):
     raise NotImplementedError(f"Block parsing is not supported for {cls} command")
 
   def execute(self):
-    print(f"  [{self.index:>2} / line:{self.source.line:>4}]  {self}  ", end="")
+    print(f"  [{self.index:>2} / L{self.source.line}]  {self}  ", end="")
     sys.stdout.flush()
 
     try:

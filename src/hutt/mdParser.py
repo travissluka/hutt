@@ -11,7 +11,8 @@ RE_MARKDOWN_HEADER = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<title>.*)\s*$")
 RE_COMMAND = re.compile(r"<!--\s+@(?P<command>\w+)(\s+(?P<args>.*))?\s+-->")
 RE_COMMAND_BLOCK_START = re.compile(r"```(?P<lang>\w+)\s+@(?P<command>\w+)(\s+(?P<args>.*))?$")
 RE_COMMAND_BLOCK_END = re.compile(r"```$")
-RE_COMMAND_ARGS = re.compile(r"(?P<key>\w+)=(?P<value>\".*\"|'.*'|\S+)")
+
+RE_COMMAND_ARGS = re.compile(r"(?P<key>\w+)=(?P<value>\".*?\"|'.*?'|\S+)")
 
 @dataclass
 class MarkdownSource:
