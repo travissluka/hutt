@@ -37,17 +37,41 @@ BANNER = textwrap.dedent(f"""
   help="Resume the tutorial from the last executed command.", )
 @click.option(
   "--logfile",
-  default="hutt.log",
+  default=None,
   type=click.Path(dir_okay=False, writable=True, resolve_path=True),
   help="Specify the log file",
-  show_default=True,)
-def _run(filename, workdir, resume, logfile):
+  show_default=False)
+@click.option(
+  "--ignore-error",
+  is_flag=True,
+  help="Continue executing commands even if errors occur.")
+@click.option(
+  "-N",
+  "--list-tests",
+  is_flag=True,
+  help="List all the tests in the markdown file and exit.")
+@click.option(
+    "-I",
+    "--test-number",
+    type=int,
+    default=None,
+    help="Run a specific test number and exit.")
+def _run(filename, workdir, resume, logfile, ignore_error, list_tests, test_number):
   """Run the tutorial from a given markdown file."""
+
+  # Ensure mutually exclusive options
+  if sum([resume, list_tests, test_number is not None]) > 1:
+    raise click.UsageError("Options --resume, --list-tests, and --test-number are mutually exclusive.")
+
+  # Set default logfile if not provided
+  if logfile is None:
+    logfile = os.path.join(workdir, "hutt.log")
 
   # output info
   print(BANNER)
   click.echo(f"Input markdown file: {filename}")
   click.echo(f"Working directory: {workdir}")
+  click.echo(f"Log file: {logfile}")
   if resume:
     raise NotImplementedError("Resume feature not implemented yet.")
 
@@ -65,12 +89,34 @@ def _run(filename, workdir, resume, logfile):
     "SCRIPT_PATH": filename,
     "WORK_DIR": workdir,})
 
+  # list all the tests
+  if list_tests:
+    print("\nList of tests:")
+    for cmd in commands:
+      if cmd.index:
+        print(f"  {cmd.index}: {cmd}")
+      else:
+        print(f"  {cmd}")
+    return
+
+  # run a specific test number
+  if test_number is not None:
+    if test_number < 1 or test_number > numCommands:
+      raise click.UsageError(f"Test number {test_number} is out of range. Valid range is 1 to {numCommands}.")
+    commands = [cmd for cmd in commands if cmd.index == test_number]
+
   # run the commands
   msg=f"\nRunning tutorial at {filename} ({numCommands} commands)"
   print(f"\033[1m\033[93m{msg}\033[0m\033[0m")
   for command in commands:
-    if not command.execute():
+    try:
+      success = command.execute()
+    except Exception as e:
+      success = False
       print(f"\033[91mError executing command number {command.index} \033[0m")
+      print(f"\033[91m{e}\033[0m")
+
+    if (not success and not ignore_error):
       break
 
   # finalize any backend systems

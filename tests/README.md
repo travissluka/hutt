@@ -20,23 +20,78 @@ Test the sleep:
 xeyes
 ```
 
-## Yaml updates
+## YAML commands
 
-Update a value in a yaml file
+### file create
 
-<!-- @hutt_set_yaml filename="test.yaml" key="foo.bar" value="100" -->
+write the following section of documentation out to a yaml file
 
-```yaml @hutt_set_yaml filename="test.yaml" method="merge"
+> ```yaml @hutt_yaml_write filename="test.yaml"
+> foo:
+>   bar: 0
+> alpha:
+>   beta:
+>     gamma: [delta, epsilon]
+> ```
+
+### updates
+
+update a value, inline (`test.02.yaml`)
+<!-- @hutt_yaml_set filename="test.yaml" key="foo.bar" value="2" -->
+<!-- @hutt_bash cmd="cp test.yaml test.02.yaml" -->
+
+update a value, block, with default method (`test.03.yaml`)
+
+> ```yaml @hutt_yaml_set filename="test.yaml"
+> foo:
+>  bar: 3
+> ```
+<!-- @hutt_bash cmd="cp test.yaml test.03.yaml" -->
+
+update a value, with the merge method (`test.04.yaml`)
+
+```yaml @hutt_yaml_set filename="test.yaml" method="merge"
 foo:
-  bar: 20
+  test: 4
 ```
+<!-- @hutt_bash cmd="cp test.yaml test.04.yaml" -->
 
-```yaml @hutt_set_yaml filename="test.yaml" method="replace"
+update a value, with the replace method (`test.05.yaml`)
+
+```yaml @hutt_yaml_set filename="test.yaml" method="replace"
 foo:
-  bar: 20
+  bar: 5
+```
+<!-- @hutt_bash cmd="cp test.yaml test.05.yaml" -->
+
+create a new key
+
+```yaml @hutt_yaml_set filename="test.yaml"
+foo:
+  newKey: 5
+```
+<!-- @hutt_bash cmd="cp test.yaml test.06.yaml" -->
+
+Set with a different parent
+
+```yaml @hutt_yaml_set filename="test.yaml" parent="foo"
+bar: 7
+```
+<!-- @hutt_bash cmd="cp test.yaml test.07.yaml" -->
+
+### commenting
+
+```yaml @hutt_yaml_write filename="test2.yaml"
+test:
+ section: {}
 ```
 
-```yaml @hutt_set_yaml filename="test.yaml" destination="foo"
-bar: 30
-```
+toggle comments for a section
+<!-- @hutt_yaml_comment filename="test2.yaml" id="section1" mode="toggle" -->
+<!-- @hutt_bash cmd="cp test2.yaml test1.01.yaml" -->
 
+<!-- @hutt_yaml_comment filename="test2.yaml" id="section2" mode="enable" -->
+<!-- @hutt_bash cmd="cp test2.yaml test2.02.yaml" -->
+
+<!-- @hutt_yaml_comment filename="test2.yaml" id="section3" mode="disable" -->
+<!-- @hutt_bash cmd="cp test2.yaml test2.03.yaml" -->

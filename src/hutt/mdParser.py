@@ -115,8 +115,11 @@ def _tokenizeMarkdown(filename: str, lines: List[str]) -> List[Token]:
   currentBlock = None
   lineNum = 0
   for line in lines:
-    # remove extra spaces
     lineNum += 1
+
+    # deal with extra whitespace
+    line = line.rstrip()
+    lineRaw = line
     line = line.strip()
 
     # helper functions
@@ -135,7 +138,7 @@ def _tokenizeMarkdown(filename: str, lines: List[str]) -> List[Token]:
     # save the source information for use later
     source = MarkdownSource(
       filename=filename,
-      content=[line],
+      content=[lineRaw],
       line=lineNum
     )
 
@@ -151,7 +154,9 @@ def _tokenizeMarkdown(filename: str, lines: List[str]) -> List[Token]:
       continue
 
     # remove block quotes and spaces
-    line = line.strip().lstrip('>').strip()
+    if line.startswith(">"):
+      lineRaw = line.lstrip(">")
+      line = lineRaw.strip()
 
     # check for a single command
     match = RE_COMMAND.match(line)
@@ -186,7 +191,7 @@ def _tokenizeMarkdown(filename: str, lines: List[str]) -> List[Token]:
 
     # add the line to the current block
     if currentBlock:
-      currentBlock.source.content.append(line)
+      currentBlock.source.content.append(lineRaw)
   errIfInBlock()
 
   return tokens
