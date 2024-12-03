@@ -14,7 +14,9 @@ def _deep_merge(dst, src):
           isinstance(v, dict) ):
       _deep_merge(dst[k], v)
     else:
-      dst[k] = v
+      # if v is null, skip merging it
+      if v is not None:
+        dst[k] = v
   return dst
 
 class YamlWrite(CommandBase):
