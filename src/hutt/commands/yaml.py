@@ -45,7 +45,7 @@ class YamlWrite(CommandBase):
   def __repr__(self) -> str:
     contentStr = str(self.content)
     contentStr = contentStr[:50] + "..." if len(contentStr) > 50 else contentStr
-    return f"YamlWrite( {self.filename}, content={contentStr} )"
+    return f"YamlWrite( {self.filename}, {contentStr} )"
 
 ## ---------------------------------------------------------------
 
@@ -53,12 +53,12 @@ class YamlSet(CommandBase):
   """ Set a value in a yaml file """
   name = "hutt_yaml_set"
 
-  def __init__(self, source, filename, newdict, method="merge", parent=None):
+  def __init__(self, source, filename, content, method="merge", parent=None):
     super().__init__(source)
     self.filename = filename
     self.method = method
     self.parent = parent
-    self.newdict = newdict
+    self.content = content
 
     # error checking on input parameters
     _methods = ["merge", "replace"]
@@ -82,7 +82,7 @@ class YamlSet(CommandBase):
     current[keys[-1]] = args["value"]
     args.pop("key")
     args.pop("value")
-    return [cls(source, newdict=newdict, **args),]
+    return [cls(source, content=newdict, **args),]
 
   @classmethod
   def parseBlock(cls, source, blockLang, blockText, args):
@@ -90,7 +90,7 @@ class YamlSet(CommandBase):
       raise ValueError(f"Expected block language to be \"yaml\" but got \"{blockLang}\".")
 
     newdict = YAML().load("\n".join(blockText))
-    return [cls(source, newdict=newdict, **args),]
+    return [cls(source, content=newdict, **args),]
 
   def _execute(self):
     # read the yaml file
@@ -111,7 +111,9 @@ class YamlSet(CommandBase):
       yaml.dump(source, f)
 
   def __repr__(self) -> str:
-    return f"YamlSet( {self.filename}, method={self.method} )"
+    contentStr = str(self.content)
+    contentStr = contentStr[:50] + "..." if len(contentStr) > 50 else contentStr
+    return f"YamlSet( {self.filename}, {contentStr}, method={self.method} )"
 
   ## ---------------------------------------------------------------
 
