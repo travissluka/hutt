@@ -137,7 +137,7 @@ class BashCommand(CommandBase):
 
   def __init__(self, source, cmd, timeout=None, exit_code=None):
     super().__init__(source)
-    self.cmd = cmd
+    self.cmd = cmd.strip()
     self.timeout = timeout
     if timeout:
       if exit_code:

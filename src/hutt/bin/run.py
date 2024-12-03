@@ -39,7 +39,7 @@ BANNER = textwrap.dedent(f"""
   "--logfile",
   default=None,
   type=click.Path(dir_okay=False, writable=True, resolve_path=True),
-  help="Specify the log file",
+  help="Specify the log file, default will be in the working directory",
   show_default=False)
 @click.option(
   "--ignore-error",
@@ -52,20 +52,20 @@ BANNER = textwrap.dedent(f"""
   help="List all the tests in the markdown file and exit.")
 @click.option(
     "-I",
-    "--test-number",
-    type=int,
+    "--test-numbers",
+    type=str,
     default=None,
-    help="Run a specific test number and exit.")
-def _run(filename, workdir, resume, logfile, ignore_error, list_tests, test_number):
+    help="Run specific test numbers (comma separated) and exit.")
+def _run(filename, workdir, resume, logfile, ignore_error, list_tests, test_numbers):
   """Run the tutorial from a given markdown file."""
 
   # Ensure mutually exclusive options
-  if sum([resume, list_tests, test_number is not None]) > 1:
-    raise click.UsageError("Options --resume, --list-tests, and --test-number are mutually exclusive.")
+  if sum([resume, list_tests, test_numbers is not None]) > 1:
+    raise click.UsageError("Options --resume, --list-tests, and --test-numbers are mutually exclusive.")
 
   # Set default logfile if not provided
   if logfile is None:
-    logfile = os.path.join(workdir, "hutt.log")
+    logfile = os.path.join(workdir, "hutt_bash.log")
 
   # output info
   print(BANNER)
@@ -91,39 +91,55 @@ def _run(filename, workdir, resume, logfile, ignore_error, list_tests, test_numb
 
   # list all the tests
   if list_tests:
-    print("\nList of tests:")
+    print("\033[1m\033[93m\nList of tests:\033[0m")
     for cmd in commands:
       if cmd.index:
-        print(f"  {cmd.index}: {cmd}")
+        print(f"  [{cmd.index:>2} / L{cmd.source.line}]  {cmd}")
       else:
-        print(f"  {cmd}")
+        print(f"\033[1m{cmd}\033[0m")
     return
 
-  # run a specific test number
-  if test_number is not None:
-    if test_number < 1 or test_number > numCommands:
-      raise click.UsageError(f"Test number {test_number} is out of range. Valid range is 1 to {numCommands}.")
-    commands = [cmd for cmd in commands if cmd.index == test_number]
+  # run specific test numbers
+  if test_numbers is not None:
+    test_numbers = test_numbers.split(',')
+    expanded_numbers = set()
+    for num in test_numbers:
+      if '-' in num:
+        start, end = map(int, num.split('-'))
+        expanded_numbers.update(range(start, end + 1))
+      else:
+        expanded_numbers.add(int(num))
+    for num in expanded_numbers:
+      if num < 1 or num > numCommands:
+        raise click.UsageError(f"Test number {num} is out of range. Valid range is 1 to {numCommands}.")
+    commands = [cmd for cmd in commands if cmd.index in expanded_numbers]
 
   # run the commands
-  failed=0
+  commandsFailed=0
+  commandsRun=0
   msg=f"\nRunning tutorial at {filename} ({numCommands} commands)"
   print(f"\033[1m\033[93m{msg}\033[0m\033[0m")
   for command in commands:
     try:
+      commandsRun += 1
       command.execute()
     except Exception as e:
-      failed += 1
+      commandsFailed += 1
       print(f"\033[91m{e}\033[0m")
 
       if (not ignore_error):
         break
+  print("")
 
   # finalize any backend systems
   Command.finalize()
 
   # print summary
-
-  print("\nSummary:")
-  print(f"  Commands executed: {numCommands}")
-  print(f"  Commands failed: {failed}")
+  print("\n\033[1m\033[93mSummary:\033[0m", end=" ")
+  if commandsFailed == 0:
+    print(f"\033[92mAll {commandsRun} commands executed successfully.\033[0m")
+  else:
+    print(f"\033[91m{commandsFailed} of {commandsRun} commands failed.\033[0m")
+  # else:
+  # print(f"  Commands executed: {numCommands}")
+  # print(f"  Commands failed: {failed}")

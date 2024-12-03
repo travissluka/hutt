@@ -102,7 +102,7 @@ class YamlSet(CommandBase):
     if self.parent:
       raise NotImplementedError("YamlSet.execute() not implemented when parent is set")
     if self.method == "merge":
-      _deep_merge(source, self.newdict)
+      _deep_merge(source, self.content)
     elif self.method == "replace":
       raise NotImplementedError("YamlSet.execute() not implemented for method=replace")
 
