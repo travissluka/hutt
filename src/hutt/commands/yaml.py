@@ -6,7 +6,19 @@
 from .base import CommandBase
 from ruamel.yaml import YAML
 
+def _deep_merge(dst, src):
+  """ Merge two yaml files, overwriting shared values from src into dst """
+  for k, v in src.items():
+    if ( k in dst and
+          isinstance(dst[k], dict) and
+          isinstance(v, dict) ):
+      _deep_merge(dst[k], v)
+    else:
+      dst[k] = v
+  return dst
+
 class YamlWrite(CommandBase):
+  """ Write a yaml file given an input block of text """
   name = "hutt_yaml_write"
 
   def __init__(self, source, filename):
@@ -38,13 +50,15 @@ class YamlWrite(CommandBase):
 ## ---------------------------------------------------------------
 
 class YamlSet(CommandBase):
+  """ Set a value in a yaml file """
   name = "hutt_yaml_set"
 
-  def __init__(self, source, filename, key, value, method="merge", parent=None):
+  def __init__(self, source, filename, newdict, method="merge", parent=None):
     super().__init__(source)
     self.filename = filename
     self.method = method
     self.parent = parent
+    self.newdict = newdict
 
     # error checking on input parameters
     _methods = ["merge", "replace"]
@@ -52,11 +66,49 @@ class YamlSet(CommandBase):
       raise ValueError(f"Invalid method: {method}. Method must be one of {_methods}")
 
   @classmethod
-  def parseBlock(cls, source, **kwargs):
-    return [cls(source, key="key", value="value", **kwargs["args"]),]
+  def parseInline(cls, source, args):
+    # for now, only single "key/value" pairs are supported.
+    # If you want something more complex, you should probably use a block.
+    kvArgs = ("key", "value")
+    if not all(k in args for k in kvArgs):
+      raise ValueError(f"Expected arguments: {kvArgs}")
+
+    # parse the key into a nested dictionary
+    keys = args["key"].split(".")
+    newdict = current = {}
+    for k in keys[:-1]:
+      current[k] = {}
+      current = current[k]
+    current[keys[-1]] = args["value"]
+    args.pop("key")
+    args.pop("value")
+    return [cls(source, newdict=newdict, **args),]
+
+  @classmethod
+  def parseBlock(cls, source, blockLang, blockText, args):
+    if blockLang != "yaml":
+      raise ValueError(f"Expected block language to be \"yaml\" but got \"{blockLang}\".")
+
+    newdict = YAML().load("\n".join(blockText))
+    return [cls(source, newdict=newdict, **args),]
 
   def _execute(self):
-    raise NotImplementedError("YamlSet.execute() not implemented")
+    # read the yaml file
+    yaml = YAML()
+    with open(self.filename, "r") as f:
+      source = yaml.load(f)
+
+    # merge the newdict into the source
+    if self.parent:
+      raise NotImplementedError("YamlSet.execute() not implemented when parent is set")
+    if self.method == "merge":
+      _deep_merge(source, self.newdict)
+    elif self.method == "replace":
+      raise NotImplementedError("YamlSet.execute() not implemented for method=replace")
+
+    # write the yaml file
+    with open(self.filename, "w") as f:
+      yaml.dump(source, f)
 
   def __repr__(self) -> str:
     return f"YamlSet( {self.filename}, method={self.method} )"

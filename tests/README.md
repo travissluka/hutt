@@ -29,6 +29,7 @@ write the following section of documentation out to a yaml file
 > ```yaml @hutt_yaml_write filename="test.yaml"
 > foo:
 >   bar: 0
+>   thing: 1
 > alpha:
 >   beta:
 >     gamma: [delta, epsilon]
