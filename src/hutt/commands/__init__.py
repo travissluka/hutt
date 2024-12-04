@@ -4,5 +4,5 @@
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
 from .bash import BashCommand
-from .yaml import YamlSet, YamlWrite, YamlComment
+from .yaml import YamlMerge, YamlWrite, YamlComment
 from .gdrive import GdriveCommand
