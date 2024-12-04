@@ -5,6 +5,7 @@
 
 from .base import CommandBase
 from ruamel.yaml import YAML
+from io import StringIO
 
 def _deep_merge(dst, src):
   """ Merge two yaml files, overwriting shared values from src into dst """
@@ -75,6 +76,8 @@ class YamlSet(CommandBase):
     if not all(k in args for k in kvArgs):
       raise ValueError(f"Expected arguments: {kvArgs}")
 
+    # TODO handle value being an anchor
+
     # parse the key into a nested dictionary
     keys = args["key"].split(".")
     newdict = current = {}
@@ -91,14 +94,31 @@ class YamlSet(CommandBase):
     if blockLang != "yaml":
       raise ValueError(f"Expected block language to be \"yaml\" but got \"{blockLang}\".")
 
+    # special handling of lines that contain yaml aliases
+    # (remove the alias and replace it with a special string,
+    # it will be put back boefore writing the file)
+    blockText = [line.replace("*", "^ALIAS^") for line in blockText]
+
     newdict = YAML().load("\n".join(blockText))
     return [cls(source, content=newdict, **args),]
 
   def _execute(self):
-    # read the yaml file
     yaml = YAML()
+
+    # read file
     with open(self.filename, "r") as f:
-      source = yaml.load(f)
+      lines = [line.rstrip('\n') for line in f.readlines()]
+
+    # do special processing for anchors (unused anchors are sometimes removed in
+    # ruamel.yaml). Create a temporary alias for each one append to a "_ANCHORS"
+    # section at the end. This section is removed before the file is written.
+    anchors = [word[1:] for line in lines for word in line.split() if word.startswith("&")]
+    lines.append("_ANCHORS:")
+    for i, anchor in enumerate(anchors):
+      lines.append(f"  _a{i}: *{anchor}")
+
+    # read the yaml
+    source = yaml.load("\n".join(lines))
 
     # merge the newdict into the source
     if self.parent:
@@ -108,9 +128,22 @@ class YamlSet(CommandBase):
     elif self.method == "replace":
       raise NotImplementedError("YamlSet.execute() not implemented for method=replace")
 
+    # write the yaml content to an array of strings
+    output = StringIO(newline="")
+    yaml.dump(source, output)
+    output_str = output.getvalue().splitlines()
+    output.close()
+
+    # special handling of aliases
+    output_str = [line.replace("^ALIAS^", "*") for line in output_str]
+
+    # special handling of anchors: remove all lines at and after "_ANCHORS:"
+    if "_ANCHORS:" in output_str:
+      output_str = output_str[:output_str.index("_ANCHORS:")]
+
     # write the yaml file
     with open(self.filename, "w") as f:
-      yaml.dump(source, f)
+      f.write("\n".join(output_str))
 
   def __repr__(self) -> str:
     contentStr = str(self.content)
