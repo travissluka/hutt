@@ -143,7 +143,7 @@ def _tokenizeMarkdown(filename: str, lines: List[str]) -> List[Token]:
     )
 
     # check for markdown headers
-    match =RE_MARKDOWN_HEADER.match(line)
+    match =RE_MARKDOWN_HEADER.match(lineRaw)
     if match:
       tokens.append(Section(
         title=match.group('title'),
