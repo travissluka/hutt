@@ -11,5 +11,5 @@ def test_run_help():
 
 def test_run_invalid_file():
     runner = CliRunner()
-    result = runner.invoke(cli, ['nonexistent.md'])
+    result = runner.invoke(cli, ['run', 'nonexistent.md'])
     assert result.exit_code != 0

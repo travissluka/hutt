@@ -77,7 +77,7 @@ def _run(filename, workdir, resume, logfile, ignore_error, list_tests, test_numb
 
   # parse the tutorial section into a list of commands
   commands = parseMarkdown(filename)
-  numCommands = max((cmd.index for cmd in commands if cmd.index))
+  numCommands = max((cmd.index for cmd in commands if cmd.index), default=0)
 
   # initialize any backend systems that the commands may need
   # change to the specified working directory
@@ -140,6 +140,9 @@ def _run(filename, workdir, resume, logfile, ignore_error, list_tests, test_numb
     print(f"\033[92mAll {commandsRun} commands executed successfully.\033[0m")
   else:
     print(f"\033[91m{commandsFailed} of {commandsRun} commands failed.\033[0m")
+
+  if commandsFailed > 0:
+    exit(1)
   # else:
   # print(f"  Commands executed: {numCommands}")
   # print(f"  Commands failed: {failed}")

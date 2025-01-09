@@ -91,6 +91,9 @@ class BashSubsystem:
     print("closing bash subsystem...")
     if not self.process:
       raise ValueError("Bash subsystem not initialized.")
+    self.process.stdin.close()
+    self.process.wait()
+    self.process = None
 
   def execute(self, command, exit_code=0):
     cmd = f"cmd=({command}); run_cmd {exit_code}\n"
