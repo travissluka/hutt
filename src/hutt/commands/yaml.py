@@ -155,13 +155,18 @@ class YamlMerge(CommandBase):
 
     # parse the key into a nested dictionary
     keys = args["key"].split(".")
+    args.pop("key")
+
+    # parse the value as a yaml/json string
+    value = args["value"]
+    value = YAML().load(value)
+    args.pop("value")
+
     newdict = current = {}
     for k in keys[:-1]:
       current[k] = {}
       current = current[k]
-    current[keys[-1]] = args["value"]
-    args.pop("key")
-    args.pop("value")
+    current[keys[-1]] = value
     return [cls(source, content=newdict, **args),]
 
   @classmethod

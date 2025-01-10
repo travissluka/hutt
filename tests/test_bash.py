@@ -1,4 +1,3 @@
-import pytest
 import hutt.commands.bash
 from click.testing import CliRunner
 from hutt.bin.hutt import cli
