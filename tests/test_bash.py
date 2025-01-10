@@ -54,6 +54,7 @@ def test_bash_block():
 
     > ```bash @hutt_bash
     > echo "Hello, World!"
+    > # This is a comment
     > sleep 1
     > ```
     """)

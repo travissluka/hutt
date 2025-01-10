@@ -37,8 +37,7 @@ class BashSubsystem:
 
   def __del__(self):
     if self.process:
-      self.process.terminate()
-      self.process.wait()
+      self.close()
 
   def initialize(self, env={}):
     print("\ninitializing bash subsystem...")
@@ -91,7 +90,7 @@ class BashSubsystem:
     print("closing bash subsystem...")
     if not self.process:
       raise ValueError("Bash subsystem not initialized.")
-    self.process.stdin.close()
+    self.process.terminate()
     self.process.wait()
     self.process = None
 
@@ -152,13 +151,12 @@ class BashCommand(CommandBase):
   def parseBlock(cls, source, blockLang, blockText, args={}):
     if blockLang != "bash":
       raise ValueError(f"Expected block language to be \"bash\" but got \"{blockLang}\".")
-
     # create a separate command for each line in the block
     commands = []
     lineNum = source.line
     for line in blockText:
       lineNum += 1
-      if line.startswith("#"):
+      if line.strip().startswith("#"):
         continue
       source2 = copy.copy(source)
       source2.line = lineNum
